@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>蓝白爱心</title>
+    <style>
+        /* 设置body和html全屏 */
+        html, body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            width: 100%;
+            overflow: hidden;
+        }
+
+        /* 背景 */
+        .video-background {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover; /* 保持内容的比例并覆盖整个容器 */
+            z-index: -1; /* 确保内容在最底层 */
+        }
+
+        /* 内容样式 */
+        .content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: rgb(240, 17, 155);
+            /* 字号：0.5rem 只有 8px，小到看不见；这里改成随屏幕缩放的写法 */
+            font-size: clamp(2rem, 8vw, 6rem);
+            font-family: 华文彩云, STCaiyun, "Microsoft YaHei", sans-serif;
+            /* 给文字加描边阴影，浅色视频背景上才看得清 */
+            text-shadow: 0 0 8px rgba(255, 255, 255, 0.9), 0 2px 12px rgba(0, 0, 0, 0.5);
+            animation: pulse 1.5s infinite;
+            text-align: center;
+            white-space: nowrap;
+            z-index: 1; /* 确保内容显示在背景视频之上 */
+        }
+
+        /* 心跳动画：之前只写了 animation 引用，但没有定义 keyframes，所以动不起来 */
+        @keyframes pulse {
+            0%, 100% { transform: translate(-50%, -50%) scale(1); }
+            50%      { transform: translate(-50%, -50%) scale(1.12); }
+        }
+
+        /* 音乐提示：浏览器禁止无交互自动播放，得提示用户点一下 */
+        .music-hint {
+            position: absolute;
+            right: 1.5rem;
+            bottom: 1.5rem;
+            padding: 0.5rem 1rem;
+            border-radius: 999px;
+            background: rgba(0, 0, 0, 0.45);
+            color: #fff;
+            font-family: "Microsoft YaHei", sans-serif;
+            font-size: 0.9rem;
+            z-index: 2;
+            transition: opacity 0.6s;
+        }
+        .music-hint.hidden {
+            opacity: 0;      /* 播放后淡出 */
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 背景视频：autoplay + muted 才能绕过浏览器的自动播放限制 -->
+    <video class="video-background" autoplay muted loop playsinline id="bgVideo">
+        <source src="蓝白爱心.mp4" type="video/mp4">
+        Your browser does not support the video tag.
+    </video>
+
+    <!-- 音乐：换成你本地自己的 mp3，把文件拷到和本页面同一个文件夹，命名为 music.mp3 -->
+    <audio id="music1" loop preload="auto">
+        <!-- 原来用的 http://music.163.com/song/media/outer/url?id=... 这个接口早已失效，
+             而且 file:// 页面加载 http:// 会被当成混合内容拦掉，所以改用本地文件。 -->
+        <source src="music.mp3" type="audio/mpeg">
+        Your browser does not support the audio element.
+    </audio>
+
+    <!-- 页面内容 -->
+    <div class="content">蓝白爱心</div>
+
+    <div class="music-hint" id="musicHint">🎵 点击页面任意位置播放音乐</div>
+
+    <script>
+        var myAudio = document.getElementById('music1');
+        var hint = document.getElementById('musicHint');
+
+        // 点击页面任意位置播放音乐（浏览器要求必须由用户操作触发）
+        document.body.addEventListener('click', function () {
+            myAudio.play().then(function () {
+                hint.classList.add('hidden');   // 播放成功，提示淡出
+            }).catch(function (err) {
+                // 播放失败时别静默吞掉，告诉用户到底怎么了
+                console.error('音乐播放失败：', err);
+                hint.textContent = '🎵 音乐加载失败，检查 music.mp3 是否存在';
+            });
+        });
+
+        // 视频也加一层兜底：文件缺失/格式不支持时，页面上给出提示而不是一片黑
+        var bgVideo = document.getElementById('bgVideo');
+        bgVideo.addEventListener('error', function () {
+            document.body.style.background = '#0b1a3a';
+            console.error('背景视频加载失败，确认 蓝白爱心.mp4 和本页面在同一目录');
+        });
+    </script>
+
+</body>
+</html>
